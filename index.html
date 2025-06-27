@@ -1,62 +1,41 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Web GPS Sender</title>
-  <style>
-    body { font-family: sans-serif; padding: 2em; text-align: center; }
-    button { padding: 1em; font-size: 1.2em; }
-    .status { margin-top: 1em; font-weight: bold; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Invia Posizione</title>
 </head>
 <body>
   <h1>Invia la tua posizione</h1>
-  <p>Premi il bottone per inviare la posizione al bot Telegram.</p>
-  <button onclick="sendLocation()">📡 Invia posizione</button>
-  <div class="status" id="status">In attesa…</div>
+  <button id="btn">📍 Invia posizione</button>
+  <p id="status">In attesa…</p>
 
   <script>
-    const ENDPOINT = "https://TUO_SERVER/ricevi_posizione"; // ← cambia con il tuo endpoint
+    const WEBHOOK = "https://hook.eu1.make.com/iu8aa7aatmrxy67k2l0mc9dvud48471u"; // sostituisci con il tuo
 
-    function sendLocation() {
+    document.getElementById("btn").onclick = () => {
       const status = document.getElementById("status");
       if (!navigator.geolocation) {
-        status.textContent = "Geolocalizzazione non supportata.";
+        status.textContent = "Geolocalizzazione non supportata";
         return;
       }
-
-      status.textContent = "Recupero posizione…";
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude.toFixed(6);
-          const lon = position.coords.longitude.toFixed(6);
-          const data = {
-            latitude: lat,
-            longitude: lon,
-            timestamp: new Date().toISOString()
-          };
-
-          fetch(ENDPOINT, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-          }).then((res) => {
-            if (res.ok) {
-              status.textContent = `Posizione inviata: ${lat}, ${lon}`;
-            } else {
-              status.textContent = "Errore durante l'invio.";
-            }
-          }).catch(() => {
-            status.textContent = "Errore di rete.";
-          });
-        },
-        (err) => {
-          status.textContent = "Errore: " + err.message;
-        }
-      );
-    }
+      status.textContent = "Calcolo posizione…";
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        fetch(WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ latitude: lat, longitude: lon, timestamp: new Date().toISOString() })
+        }).then(() => {
+          status.textContent = `✓ Posizione inviata: ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        }).catch(() => {
+          status.textContent = "Errore invio.";
+        });
+      }, err => {
+        status.textContent = "Errore: " + err.message;
+      });
+    };
   </script>
 </body>
 </html>
